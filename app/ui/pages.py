@@ -21,25 +21,62 @@ from app.utils.validation import validate_phone
 
 
 def money(value: Decimal) -> str:
-    return f"INR {value:,.2f}"
+    return f"₹{value:,.2f}"
 
 
 def _quantity_inputs(menu_items: list, key_prefix: str) -> dict[int, int]:
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stImage"] img {
+            aspect-ratio: 3 / 2;
+            object-fit: cover;
+            border-radius: 0.55rem;
+        }
+        div[data-testid="stNumberInput"] { margin-bottom: 0.15rem; }
+        div[data-testid="stVerticalBlockBorderWrapper"] { background: #fffdfa; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     quantities: dict[int, int] = {}
-    for category in sorted({item.category for item in menu_items}):
-        with st.expander(category, expanded=True):
-            columns = st.columns(2)
-            for index, item in enumerate(i for i in menu_items if i.category == category):
-                with columns[index % 2]:
-                    st.image(str(resolve_menu_image(item.name, item.category)), width=150)
-                    st.markdown(f"**{item.name}**  \n{money(item.price)}")
-                    quantities[item.id] = st.number_input(
-                        "Quantity",
-                        min_value=0,
-                        max_value=100,
-                        key=f"{key_prefix}_{item.id}",
-                        label_visibility="collapsed",
-                    )
+    categories = sorted({item.category for item in menu_items})
+    for category, tab in zip(categories, st.tabs(categories), strict=True):
+        category_items = [item for item in menu_items if item.category == category]
+        grouped: dict[str, list] = {}
+        for item in category_items:
+            display_name = item.name
+            for suffix in (" (Half)", " (Full)"):
+                if display_name.endswith(suffix):
+                    display_name = display_name.removesuffix(suffix)
+                    break
+            grouped.setdefault(display_name, []).append(item)
+
+        with tab:
+            columns = st.columns(3, gap="small")
+            for index, (display_name, variants) in enumerate(grouped.items()):
+                with columns[index % 3]:
+                    with st.container(border=True):
+                        first = variants[0]
+                        st.image(
+                            str(resolve_menu_image(first.name, first.category)),
+                            use_container_width=True,
+                        )
+                        st.markdown(f"**{display_name}**")
+                        controls = st.columns(len(variants), gap="small")
+                        for control, item in zip(controls, variants, strict=True):
+                            variant = ""
+                            if item.name.endswith(" (Half)"):
+                                variant = "Half · "
+                            elif item.name.endswith(" (Full)"):
+                                variant = "Full · "
+                            with control:
+                                quantities[item.id] = st.number_input(
+                                    f"{variant}{money(item.price)}",
+                                    min_value=0,
+                                    max_value=100,
+                                    key=f"{key_prefix}_{item.id}",
+                                )
     return quantities
 
 
