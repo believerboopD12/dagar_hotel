@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, inspect, text
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -40,6 +40,12 @@ SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 def initialize_database(database_engine: Engine = engine) -> None:
     settings.validate()
     Base.metadata.create_all(database_engine)
+    user_columns = {column["name"] for column in inspect(database_engine).get_columns("users")}
+    if "is_demo" not in user_columns:
+        with database_engine.begin() as connection:
+            connection.execute(
+                text("ALTER TABLE users ADD COLUMN is_demo BOOLEAN NOT NULL DEFAULT FALSE")
+            )
     logger.info("Database schema is ready")
 
 

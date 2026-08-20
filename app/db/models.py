@@ -37,6 +37,22 @@ class PaymentStatus(str, enum.Enum):
     REFUNDED = "refunded"
 
 
+class UserRole(str, enum.Enum):
+    ADMIN = "admin"
+    STAFF = "staff"
+
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[UserRole] = mapped_column(Enum(UserRole, native_enum=False), nullable=False)
+    is_active: Mapped[bool] = mapped_column(default=True, nullable=False)
+    is_demo: Mapped[bool] = mapped_column(default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class Customer(Base):
     __tablename__ = "customers"
     id: Mapped[int] = mapped_column(primary_key=True)

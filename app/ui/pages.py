@@ -16,6 +16,7 @@ from app.services.exports import export_customers, export_orders, export_payment
 from app.services.menu import list_menu_items, save_menu_item
 from app.services.orders import create_order, record_payment, update_order_status
 from app.services.reporting import dashboard_metrics, popular_items, recent_orders
+from app.utils.assets import resolve_menu_image
 from app.utils.validation import validate_phone
 
 
@@ -29,12 +30,16 @@ def _quantity_inputs(menu_items: list, key_prefix: str) -> dict[int, int]:
         with st.expander(category, expanded=True):
             columns = st.columns(2)
             for index, item in enumerate(i for i in menu_items if i.category == category):
-                quantities[item.id] = columns[index % 2].number_input(
-                    f"{item.name} - {money(item.price)}",
-                    min_value=0,
-                    max_value=100,
-                    key=f"{key_prefix}_{item.id}",
-                )
+                with columns[index % 2]:
+                    st.image(str(resolve_menu_image(item.name, item.category)), width=150)
+                    st.markdown(f"**{item.name}**  \n{money(item.price)}")
+                    quantities[item.id] = st.number_input(
+                        "Quantity",
+                        min_value=0,
+                        max_value=100,
+                        key=f"{key_prefix}_{item.id}",
+                        label_visibility="collapsed",
+                    )
     return quantities
 
 
@@ -308,3 +313,41 @@ def menu_page() -> None:
         hide_index=True,
         use_container_width=True,
     )
+
+
+def staff_customers_page() -> None:
+    st.header("Customer lookup")
+    with st.form("staff_customer"):
+        name = st.text_input("Name")
+        phone = st.text_input("Mobile number", max_chars=12)
+        submitted = st.form_submit_button("Create or update customer")
+    if submitted:
+        try:
+            with session_scope() as session:
+                save_customer(session, name, phone)
+            st.success("Customer saved.")
+        except ValueError as exc:
+            st.error(str(exc))
+    query = st.text_input("Search customers")
+    with session_scope() as session:
+        customers = search_customers(session, query, limit=100)
+    st.dataframe(
+        [{"Name": c.name, "Mobile": c.phone} for c in customers],
+        hide_index=True,
+        use_container_width=True,
+    )
+
+
+def menu_browse_page() -> None:
+    st.header("Menu availability")
+    with session_scope() as session:
+        items = list_menu_items(session)
+    for category in sorted({item.category for item in items}):
+        st.subheader(category)
+        columns = st.columns(3)
+        for index, item in enumerate(i for i in items if i.category == category):
+            with columns[index % 3]:
+                st.image(str(resolve_menu_image(item.name, item.category)), width=140)
+                st.write(item.name)
+                status = "Available" if item.is_available else "Unavailable"
+                st.caption(f"{money(item.price)} - {status}")

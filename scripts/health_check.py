@@ -4,13 +4,14 @@ import importlib
 import os
 import sys
 
-from sqlalchemy import inspect, text
+from sqlalchemy import inspect, select, text
 from sqlalchemy.engine import make_url
 
 from app.config import PROJECT_ROOT, settings
-from app.db.database import engine, initialize_database
+from app.db.database import engine, initialize_database, session_scope
+from app.db.models import User, UserRole
 
-REQUIRED_TABLES = {"customers", "menu_items", "orders", "order_items", "payments"}
+REQUIRED_TABLES = {"users", "customers", "menu_items", "orders", "order_items", "payments"}
 
 
 def run() -> int:
@@ -48,12 +49,16 @@ def run() -> int:
         )
     except Exception as exc:
         checks.append(("Database", False, str(exc)))
-    auth_ok = settings.app_env != "production" or bool(settings.admin_password_hash)
+    with session_scope() as session:
+        admin_exists = session.scalar(
+            select(User.id).where(User.role == UserRole.ADMIN, User.is_active.is_(True)).limit(1)
+        )
+    auth_ok = settings.app_env != "production" or bool(admin_exists)
     checks.append(
         (
             "Authentication",
             auth_ok,
-            "appropriate for mode" if auth_ok else "production hash missing",
+            "database users enabled" if auth_ok else "production requires an active admin",
         )
     )
     for name, passed, detail in checks:

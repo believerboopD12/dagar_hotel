@@ -26,7 +26,6 @@ class Settings:
     log_level: str = os.getenv("LOG_LEVEL", "INFO").upper()
     tax_rate: Decimal = _decimal_setting("TAX_RATE", "5")
     minimum_order_amount: Decimal = _decimal_setting("MINIMUM_ORDER_AMOUNT", "200")
-    admin_password_hash: str = os.getenv("APP_ADMIN_PASSWORD_HASH", "")
 
     def sqlalchemy_url(self) -> str:
         """Return configured DB URL or the project-local SQLite fallback."""

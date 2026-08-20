@@ -7,9 +7,9 @@ import secrets
 ITERATIONS = 600_000
 
 
-def hash_password(password: str) -> str:
-    if len(password) < 10:
-        raise ValueError("Admin password must contain at least 10 characters.")
+def hash_password(password: str, minimum_length: int = 10) -> str:
+    if len(password) < minimum_length:
+        raise ValueError(f"Password must contain at least {minimum_length} characters.")
     salt = secrets.token_hex(16)
     digest = hashlib.pbkdf2_hmac("sha256", password.encode(), bytes.fromhex(salt), ITERATIONS)
     return "pbkdf2_sha256$" + str(ITERATIONS) + "$" + salt + "$" + digest.hex()
