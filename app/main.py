@@ -1,15 +1,20 @@
 """Streamlit entry point for restaurant operations."""
 
 import logging
+import sys
 from pathlib import Path
 
 import streamlit as st
 
-from app.config import settings
-from app.db.database import initialize_database
-from app.ui.pages import customer_page, dashboard_page, menu_page, new_order_page, orders_page
-from app.utils.logging import configure_logging
-from app.utils.security import verify_password
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+from app.config import settings  # noqa: E402, I001
+from app.db.database import initialize_database  # noqa: E402
+from app.ui.pages import customer_page, dashboard_page, menu_page, new_order_page, orders_page  # noqa: E402
+from app.utils.logging import configure_logging  # noqa: E402
+from app.utils.security import verify_password  # noqa: E402
 
 configure_logging(settings.log_level)
 logger = logging.getLogger(__name__)
