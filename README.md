@@ -11,6 +11,8 @@ The original application mixed interface code, SQL, credentials, menu prices, an
 ## Features
 
 - Customer create, search, and update-by-mobile with phone/email validation
+- Separate public customer-ordering and password-protected staff portals
+- Staff-only discounts, payment confirmation, operational records, and menu controls
 - Categorized menu management with availability controls
 - Transactional order, line-item, and payment creation
 - Decimal subtotal, discount, configurable tax, and total calculations
@@ -109,7 +111,7 @@ MINIMUM_ORDER_AMOUNT=200
 APP_ADMIN_PASSWORD_HASH=
 ```
 
-An empty `DATABASE_URL` automatically uses `data/restaurant.db`. Development permits local access without a password hash. For password-protected or production-style use, generate a hash with `python -m scripts.hash_password` and set it outside Git.
+An empty `DATABASE_URL` automatically uses `data/restaurant.db`. Customer ordering works without login; staff administration always requires a configured hash. Generate it with `python -m scripts.hash_password`, place it in local `.env`, and restart Streamlit.
 
 ## Local Persistence and Demo Data
 
@@ -136,7 +138,7 @@ Use download buttons on Customers and Orders & Payments pages. Exports include c
 
 ## Tests and Health Check
 
-Verified result: **30 passed, 0 failed, 61% useful overall coverage**. Core services are 80?100% covered.
+Verified result: **31 passed, 0 failed, 54% overall coverage**. Core business, persistence, security, and export modules are 81-100% covered; Streamlit portals were additionally verified with Streamlit AppTest.
 
 ```bash
 pytest --cov=app
@@ -162,7 +164,7 @@ Secrets are environment-based and ignored. Production-style mode requires a salt
 
 ## Limitations
 
-Designed for one small business and primarily one laptop. Authentication is intentionally simple; there are no staff roles, online payment gateway, card storage, invoice PDF, or automated multi-device synchronization. SQLite is not appropriate for multiple application servers.
+Designed for one small business and primarily one laptop. Authentication uses one shared staff credential rather than individual staff accounts or permissions. There is no online payment gateway, card storage, invoice PDF, or automated multi-device synchronization. SQLite is not appropriate for multiple application servers.
 
 ## Optional Future Deployment
 

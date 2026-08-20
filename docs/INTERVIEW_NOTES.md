@@ -38,7 +38,7 @@ The service layer validates customers, quantity 1?100, availability, payment met
 
 ## Authentication and Security
 
-Passwords are PBKDF2-SHA256 hashes with random salts and constant-time verification. Secrets are environment-based, SQL is parameterized, logs exclude PII and credentials, and local DB/backups are ignored. Development can run without a password; production mode cannot.
+The customer portal is public, while every staff/admin page requires a configured PBKDF2-SHA256 password hash. Discounts, payment confirmation, customer lists, exports, and menu changes are staff-only. Secrets are environment-based, SQL is parameterized, logs exclude PII and credentials, and local DB/backups are ignored.
 
 ## Logging
 

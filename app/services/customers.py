@@ -9,7 +9,12 @@ from app.utils.validation import clean_name, validate_email, validate_phone
 
 
 def save_customer(
-    session: Session, name: str, phone: str, email: str | None = None, address: str | None = None
+    session: Session,
+    name: str,
+    phone: str,
+    email: str | None = None,
+    address: str | None = None,
+    update_existing: bool = True,
 ) -> Customer:
     phone = validate_phone(phone)
     values = {
@@ -19,6 +24,8 @@ def save_customer(
     }
     customer = session.scalar(select(Customer).where(Customer.phone == phone))
     if customer:
+        if not update_existing:
+            return customer
         customer.name, customer.email, customer.address = (
             values["name"],
             values["email"],
